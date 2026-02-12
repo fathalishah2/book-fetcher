@@ -1,4 +1,4 @@
-### 📚 OpenLibrary Book Fetcher
+# 📚 OpenLibrary Book Fetcher
 A Python script that fetches 50 valid books published after 2000 from the [OpenLibrary API](https://openlibrary.org/).
 
 ## Features
@@ -26,18 +26,18 @@ python main.py
 Output will be saved in:
 outputs/books_after_2000.csv
 
-# Example Output
+### Example Output
 | Title | Author | Publish Year |
 |-------|--------|--------------|
 | Atomic Habits | James Clear | 2018 |
 | ... | ... | ... |
 
-# 🛠️ Requirements
+### 🛠️ Requirements
 - Python 3.8+
 - requests
 
-# 📄 License
+### 📄 License
 MIT
 
-## 👨‍💻 Author
+### 👨‍💻 Author
 (https://github.com/fathalishah2)
