@@ -15,7 +15,7 @@ A Python script that fetches 50 valid books published after 2000 from the [OpenL
 
 ## Installation
 1. Clone the repository:
-git clone https://github.com/yourusername/openlibrary-book-fetcher.git
+git clone https://github.com/fathalishah2/book-fetcher.git
 cd openlibrary-book-fetcher
 2. Install dependencies:
 pip install -r requirements.txt
