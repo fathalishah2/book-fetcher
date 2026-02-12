@@ -8,3 +8,10 @@ Python3
 Requests library
 CSV module
  
+Installation:
+git clone https://github.com/fathalishah2/book-fetcher.git
+cd book_fetcher
+pip install -r requirements.txt
+
+After installation you can run code with in terminal:
+python main.py
