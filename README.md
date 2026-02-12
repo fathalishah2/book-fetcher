@@ -32,12 +32,12 @@ outputs/books_after_2000.csv
 | Atomic Habits | James Clear | 2018 |
 | ... | ... | ... |
 
-### 🛠️ Requirements
+### Requirements
 - Python 3.8+
 - requests
 
-### 📄 License
+### License
 MIT
 
-### 👨‍💻 Author
+### Author
 (https://github.com/fathalishah2)
