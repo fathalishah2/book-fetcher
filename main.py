@@ -1,91 +1,58 @@
 # -----------
-#Created by: fathalishah2 in github
+# Project : Openlibrary book fetcher with publick API
+# Github : https://github.com/fathalishah2
+# Purpose : Find books by their publish date(year)
 # -----------
+
 import requests
 import csv
 import os
-from typing import List, Dict
-# ----------------------
-# ----Configuration---
-# --------------------
+
+# Configs
 API_URL = "https://openlibrary.org/search.json"
-LIMIT = 50
-MIN_YEAR = "1900"
-OUTPUT_FILE = "output/books.csv"
+HEADERS = {"User-Agent": "BookFetcher/1.0"}
+MIN_YEAR = 2000
+MAX_YEAR = 2026
+TARGET_COUNT = 50
 
-# User-Agent برای اطمینان از پاسخ API
-HEADERS = {
-    "User-Agent": "bookfetcher/1.0 (mhdifathali@gmail.com)"
-}
-# ----------------------
+OUTPUT = "outputs"
+os.makedirs(OUTPUT, exist_ok=True)
+OUTPUT_F = os.path.join(OUTPUT, "books_after_2000.csv")
+filtered_books = []
+page = 1
 
-def fetch_books(api_url: str, query: str, limit: int) -> List[Dict]:
-    """
-    Fetch books from OpenLibrary API based on a general query.
-    """
-    params = {
-        "q": query,
-        "limit": limit
-    }
+# Loop until receiving TARGET_COUNT
+while len(filtered_books) < TARGET_COUNT:
+    params = {"q": "book", "limit": 100, "page": page, "sort": "new"}
 
-    response = requests.get(api_url, params=params, headers=HEADERS, timeout=25)
-    response.raise_for_status()
-
+    response = requests.get(API_URL, params=params, headers=HEADERS, timeout=10)
     data = response.json()
-    return data.get("docs", [])
+    books_raw = data.get("docs", [])
 
-def filter_books_by_year(books: List[Dict], min_year: int) -> List[Dict]:
-    """
-    Filter books published after a specific year.
-    """
-    filtered = []
+    if not books_raw:
+        break  # There is no more book!
 
-    for book in books:
-        years = book.get("publish_year", [])
-        recent_years = [year for year in years if year > min_year]
+    for book in books_raw:
+        year = book.get("first_publish_year")
+        if year and MIN_YEAR <= year <= MAX_YEAR:
+            filtered_books.append(
+                {
+                    "title": book.get("title", "N/A"),
+                    "author": ", ".join(book.get("author_name", [])),
+                    "publish_year": year,
+                }
+            )
+            if len(filtered_books) >= TARGET_COUNT:
+                break
 
-        if recent_years:
-            filtered.append({
-                "title": book.get("title", "N/A"),
-                "author": ", ".join(book.get("author_name", [])),
-                "publish_year": max(recent_years)
-            })
+    page += 1
 
-    return filtered
+# Saving
+with open(OUTPUT_F, "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=["title", "author", "publish_year"])
+    writer.writeheader()
+    writer.writerows(filtered_books[:TARGET_COUNT])
 
-def save_to_csv(books: List[Dict], filename: str) -> None:
-    """
-    Save book data into a CSV file.
-    """
-    if not books:
-        print("No books to save.")
-        return
-
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-    fieldnames = ["title", "author", "publish_year"]
-
-    with open(filename, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(books)
-
-
-def main():
-    try:
-        # کوئری عمومی که همیشه نتیجه می‌دهد
-        query = "book"
-
-        books = fetch_books(API_URL, query, LIMIT)
-
-        filtered_books = filter_books_by_year(books, MIN_YEAR)
-        save_to_csv(filtered_books, OUTPUT_FILE)
-
-        print(f"Saved {len(filtered_books)} books published after {MIN_YEAR}.")
-
-    except requests.RequestException as e:
-        print(f"API Error: {e}")
-
-
-if __name__ == "__main__":
-    main()
+print(
+    f"{len(filtered_books[:TARGET_COUNT])} after {MIN_YEAR} saved in {os.path.abspath(OUTPUT_F)}!"
+)
