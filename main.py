@@ -7,34 +7,48 @@
 import requests
 import csv
 import os
+from typing import List, Dict, Any
 
 # Configs
-API_URL = "https://openlibrary.org/search.json"
-HEADERS = {"User-Agent": "BookFetcher/1.0"}
-MIN_YEAR = 2000
-MAX_YEAR = 2026
-TARGET_COUNT = 50
+API_URL: str = "https://openlibrary.org/search.json"
+HEADERS: Dict[str, str] = {"User-Agent": "BookFetcher/1.0"}
+MIN_YEAR: int = 2000
+MAX_YEAR: int = 2026
+TARGET_COUNT: int = 50
 
-OUTPUT = "outputs"
+OUTPUT: str = "outputs"
 os.makedirs(OUTPUT, exist_ok=True)
-OUTPUT_F = os.path.join(OUTPUT, "books_after_2000.csv")
-filtered_books = []
-page = 1
+OUTPUT_F: str = os.path.join(OUTPUT, "books_after_2000.csv")
+
+filtered_books: List[Dict[str, Any]] = []
+page: int = 1
 
 # Loop until receiving TARGET_COUNT
 while len(filtered_books) < TARGET_COUNT:
-    params = {"q": "book", "limit": 100, "page": page, "sort": "new"}
+    params: Dict[str, Any] = {
+        "q": "book", 
+        "limit": 100, 
+        "page": page, 
+        "sort": "new"
+        }
 
-    response = requests.get(API_URL, params=params, headers=HEADERS, timeout=10)
-    data = response.json()
-    books_raw = data.get("docs", [])
+    response: requests.Response = requests.get(
+        API_URL, 
+        params=params, 
+        headers=HEADERS, 
+        timeout=10
+        )
+    
+    data: Dict[str, Any] = response.json()
+    books_raw: List[Dict[str, Any]] = data.get("docs", [])
 
     if not books_raw:
         break  # There is no more book!
 
     for book in books_raw:
-        year = book.get("first_publish_year")
-        if year and MIN_YEAR <= year <= MAX_YEAR:
+        year: int | None = book.get("first_publish_year")
+
+        if isinstance(year, int) and MIN_YEAR <= year <= MAX_YEAR:
             filtered_books.append(
                 {
                     "title": book.get("title", "N/A"),
