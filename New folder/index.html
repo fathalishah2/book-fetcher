@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Local Book Search</title>
+
+<style>
+body { font-family: sans-serif; padding: 40px; background: #f4f7f6; }
+.container { max-width: 600px; margin: auto; }
+
+.search-area, .add-area {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+.book-item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    list-style: none;
+    border-left: 5px solid #007bff;
+}
+
+.error { color: red; list-style: none; }
+
+.success { color: green; margin-bottom: 10px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>📚 My API Book Search</h1>
+
+    <!-- 🔵 ADD BOOK -->
+    <h3>➕ Add Book</h3>
+    <div class="add-area">
+        <input type="text" id="titleInput" placeholder="Title">
+        <input type="text" id="authorInput" placeholder="Author">
+        <input type="text" id="publisherInput" placeholder="Publisher">
+        <button onclick="addBook()">Add</button>
+    </div>
+    <div id="addMessage"></div>
+
+    <hr>
+
+    <!-- 🔵 SEARCH -->
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="Enter title, author, or publisher...">
+        <button onclick="searchBooks()">Search</button>
+    </div>
+
+    <ul id="results"></ul>
+</div>
+
+<script>
+const BASE_URL = "http://127.0.0.1:8000";
+
+// ===============================
+// ➕ ADD BOOK
+// ===============================
+async function addBook() {
+    const title = document.getElementById("titleInput").value.trim();
+    const author = document.getElementById("authorInput").value.trim();
+    const publisher = document.getElementById("publisherInput").value.trim();
+    const msg = document.getElementById("addMessage");
+
+    msg.innerHTML = "⏳ Adding...";
+
+    try {
+        const response = await fetch(BASE_URL + "/books", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: title,
+                author: author,
+                publisher: publisher
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to add book");
+        }
+
+        msg.innerHTML = "<span class='success'>✅ Book added successfully!</span>";
+
+        // پاک کردن فیلدها
+        document.getElementById("titleInput").value = "";
+        document.getElementById("authorInput").value = "";
+        document.getElementById("publisherInput").value = "";
+
+    } catch (err) {
+        msg.innerHTML = "<span class='error'>❌ Error adding book</span>";
+        console.error(err);
+    }
+}
+
+
+// ===============================
+// 🔍 SEARCH BOOKS
+// ===============================
+async function searchBooks() {
+    const input = document.getElementById("searchInput");
+    const list = document.getElementById("results");
+    const query = input.value.trim();
+
+    list.innerHTML = "<li>Loading...</li>";
+
+    try {
+        const url = BASE_URL + "/search-books/?q=" + encodeURIComponent(query);
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Server is not responding!");
+        }
+
+        const data = await response.json();
+        const books = data.items; // ⭐ مهم
+
+        list.innerHTML = "";
+
+        if (!books || books.length === 0) {
+            list.innerHTML = "<li>🚫 No books found. Try another word.</li>";
+            return;
+        }
+
+        books.forEach(function(book) {
+            const li = document.createElement("li");
+            li.className = "book-item";
+
+            const title = "<strong>" + book.title + "</strong><br>";
+            const author = "✍️ Author: " + book.author + "<br>";
+            const publisher = "🏢 Publisher: " + book.publisher;
+
+            li.innerHTML = title + author + publisher;
+            list.appendChild(li);
+        });
+
+    } catch (err) {
+        list.innerHTML = "<li class='error'>❌ Cannot connect to FastAPI server</li>";
+        console.error(err);
+    }
+}
+
+
+// Enter برای سرچ
+document.getElementById("searchInput").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        searchBooks();
+    }
+});
+</script>
+
+</body>
+</html>
